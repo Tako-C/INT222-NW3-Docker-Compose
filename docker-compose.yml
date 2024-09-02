@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  dbserver:
+    container_name: dbserver
+    image: mysql/mysql-server
+    ports:
+      - '3000:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: 'mysql'
+    volumes:
+      - ./scrip_create_kradan_kanbanV5.sql:/docker-entrypoint-initdb.d/scrip_create_kradan_kanbanV5.sql
+
+  backend:
+    container_name: backend
+    image: backend/image
+    build:
+      context: ./INT222-NW3-PROJECT-BACKEND
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '8080:8080'
+    depends_on:
+      - dbserver
+
+  reverse_proxy:
+    image: nginx:alpine
+    container_name: reverse_proxy
+    ports:
+       - '80:80'
+    volumes:
+       - ./intproj23.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+       - frontend
+
+  frontend:
+    image: frontend/image
+    container_name: frontend
+    build:
+      context: ./INT222-NW3-PROJECT-FRONTEND
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - backend
